@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel — Cuponera del Barrio</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .tabs {
+      display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1.75rem;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: .75rem 1.1rem; font-family: 'DM Sans', sans-serif;
+      font-size: .9rem; font-weight: 500; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: color .15s, border-color .15s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .panel-header {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: .75rem; margin-bottom: 1.5rem;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+    @media(max-width:600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .chart-card { padding: 1rem; }
+      .chart-card__header { flex-direction: column; align-items: flex-start; }
+      .chart-controls { width: 100%; }
+      .ctrl-select { flex: 1; min-width: 0; }
+    }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+    .stat-card__label { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; }
+    .stat-card__value { font-family: 'Fraunces', serif; font-size: 1.9rem; font-weight: 700; color: var(--accent); }
+
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+    .chart-card__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+    .chart-card__title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; }
+    .chart-controls { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .ctrl-select {
+      font-family: 'DM Sans', sans-serif; font-size: .85rem;
+      padding: .35rem .7rem; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); background: var(--surface);
+      color: var(--text); cursor: pointer;
+    }
+    .ctrl-select:focus { outline: none; border-color: var(--accent); }
+    canvas { max-height: 260px; width: 100% !important; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Cuponera <span>del Barrio</span></a>
+    <div class="nav__links">
+      <span id="nav-nombre" style="font-size:.9rem;color:var(--text-muted);"></span>
+      <button class="btn btn--ghost btn--sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container" style="padding-top:1.75rem;padding-bottom:3rem;">
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tbtn-cupones" onclick="switchTab('cupones')">Mis cupones</button>
+    <button class="tab-btn" id="tbtn-stats" onclick="switchTab('stats')">Estadísticas</button>
+    <button class="tab-btn" id="tbtn-feed" onclick="switchTab('feed')">Feed del barrio</button>
+  </div>
+
+  <!-- Tab: Cupones -->
+  <div class="tab-panel active" id="tab-cupones">
+    <div class="panel-header">
+      <div>
+        <h2 style="font-family:'Fraunces',serif;">Mis cupones</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;">Creá, activá y administrá tus cupones</p>
+      </div>
+      <button class="btn btn--primary" onclick="abrirModalCrear()">+ Nuevo cupón</button>
+    </div>
+    <div id="lista-cupones" style="display:flex;flex-direction:column;gap:.85rem;">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Estadísticas -->
+  <div class="tab-panel" id="tab-stats">
+    <div style="margin-bottom:1.5rem;">
+      <h2 style="font-family:'Fraunces',serif;">Estadísticas</h2>
+      <p style="color:var(--text-muted);font-size:.9rem;">Resumen de tus ventas con cupones</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card__label">Total generado</div>
+        <div class="stat-card__value" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Canjes confirmados</div>
+        <div class="stat-card__value" id="stat-canjes">—</div>
+      </div>
+    </div>
+
+    <!-- Gráfico 1: Ingresos generales -->
+    <div class="chart-card">
+      <div class="chart-card__header">
+        <div class="chart-card__title">Dinero generado con cupones</div>
+        <div class="chart-controls">
+          <select class="ctrl-select" id="ctrl-periodo-ingresos" onchange="cargarGraficoIngresos()">
+            <option value="dia">Por día</option>
+            <option value="semana">Por semana</option>
+            <option value="mes">Por mes</option>
+          </select>
+        </div>
+      </div>
+      <canvas id="chart-ingresos" style="display:none;"></canvas>
+      <div id="empty-ingresos" class="empty" style="padding:2rem 0;">
+        <div class="empty__text">Sin datos todavía</div>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Ventas por producto -->
+    <div class="chart-card">
+      <div class="chart-card__header">
+        <div class="chart-card__title">Ventas por producto</div>
+        <div class="chart-controls">
+          <select class="ctrl-select" id="ctrl-producto" onchange="cargarGraficoProducto()">
+            <option value="">— Elegir producto —</option>
+          </select>
+          <select class="ctrl-select" id="ctrl-periodo-producto" onchange="cargarGraficoProducto()">
+            <option value="dia">Por día</option>
+            <option value="semana">Por semana</option>
+            <option value="mes">Por mes</option>
+          </select>
+          <select class="ctrl-select" id="ctrl-metrica" onchange="cargarGraficoProducto()">
+            <option value="dinero">Dinero ($)</option>
+            <option value="canjes">Canjes</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+      </div>
+      <canvas id="chart-producto" style="display:none;"></canvas>
+      <div id="empty-producto" class="empty" style="padding:2rem 0;">
+        <div class="empty__text">Elegí un producto para ver sus ventas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Feed -->
+  <div class="tab-panel" id="tab-feed">
+    <div style="margin-bottom:1.5rem;">
+      <h2 style="font-family:'Fraunces',serif;">Feed del barrio</h2>
+      <p style="color:var(--text-muted);font-size:.9rem;">Todos los cupones activos ahora mismo</p>
+    </div>
+    <div id="feed-panel" class="feed">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal: Crear cupón -->
+<div class="modal-overlay" id="modal-crear">
+  <div class="modal">
+    <h2 class="modal__title">Nuevo cupón</h2>
+    <div id="alert-crear"></div>
+    <div class="form-group">
+      <label class="form-label">Producto</label>
+      <input type="text" id="c-producto" class="form-input" placeholder="Ej: Milanesa de novillo">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Precio normal</label>
+        <input type="number" id="c-precio-base" class="form-input" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio con cupón</label>
+        <input type="number" id="c-precio-final" class="form-input" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de precio</label>
+      <select id="c-tipo" class="form-select">
+        <option value="unidad">Por unidad</option>
+        <option value="peso">Por kilogramo / peso</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Límite de canjes (opcional)</label>
+        <input type="number" id="c-limite" class="form-input" placeholder="Sin límite" min="1" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Un uso por persona</label>
+        <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;">
+          <label class="toggle">
+            <input type="checkbox" id="c-un-canje">
+            <span class="toggle__track"></span>
+          </label>
+          <span style="font-size:.85rem;color:var(--text-muted);">Activar</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" onclick="cerrarModal('modal-crear')">Cancelar</button>
+      <button class="btn btn--primary" onclick="crearCupon()">Crear cupón</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver QR -->
+<div class="modal-overlay" id="modal-qr">
+  <div class="modal" style="text-align:center;">
+    <h2 class="modal__title" id="qr-titulo">Código QR</h2>
+    <p style="color:var(--text-muted);font-size:.9rem;">Mostrá este código al cliente para que lo escanee</p>
+    <img id="qr-imagen" class="qr-img" src="" alt="QR del cupón">
+    <div class="modal__actions">
+      <button class="btn btn--secondary btn--full" onclick="cerrarModal('modal-qr')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Canje entrante -->
+<div class="modal-overlay" id="modal-canje">
+  <div class="modal">
+    <h2 class="modal__title">🛒 Cliente escaneó un cupón</h2>
+    <div id="canje-info" style="background:var(--surface-warm);border-radius:var(--radius-sm);padding:1rem;margin:.75rem 0;">
+      <div style="font-family:'Fraunces',serif;font-size:1.2rem;" id="canje-producto"></div>
+      <div style="color:var(--text-muted);font-size:.9rem;margin-top:.3rem;" id="canje-precio-label"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="canje-cantidad-label">¿Cuánto lleva el cliente?</label>
+      <input type="number" id="canje-cantidad" class="form-input" placeholder="0" min="0.01" step="0.01">
+    </div>
+    <div id="canje-total" style="font-size:1rem;color:var(--text-muted);margin-bottom:.5rem;"></div>
+    <div class="modal__actions">
+      <button class="btn btn--danger" onclick="cancelarCanje()">Cancelar</button>
+      <button class="btn btn--primary" onclick="confirmarCanje()">Confirmar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Escáner QR -->
+<div class="modal-overlay" id="scanner-overlay">
+  <div class="modal">
+    <h2 class="modal__title">Escanear cupón</h2>
+    <p style="color:var(--text-muted);font-size:.95rem;margin-bottom:1rem;">
+      Apuntá la cámara al código QR que te muestra el vendedor.
+    </p>
+    <div id="scanner-container" style="position:relative;width:100%;aspect-ratio:1;background:#000;border-radius:var(--radius-sm);overflow:hidden;">
+      <video id="qr-video" style="width:100%;height:100%;object-fit:cover;" playsinline></video>
+      <canvas id="qr-canvas" style="display:none;"></canvas>
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);animation:scanLine 2s linear infinite;"></div>
+    </div>
+    <div id="scan-result" style="margin-top:1rem;display:none;"></div>
+    <div class="modal__actions">
+      <button class="btn btn--secondary btn--full" onclick="cerrarScanner()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<style>@keyframes scanLine{0%{top:0}100%{top:calc(100% - 2px)}}</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/panel.js"></script>
+<script src="/static/js/stats.js"></script>
+<script src="/static/js/websocket.js"></script>
+<script src="/static/js/feed.js"></script>
+<script src="/static/js/scanner.js"></script>
+</body>
+</html>

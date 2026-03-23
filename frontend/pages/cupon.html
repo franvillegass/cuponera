@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cupón — Cuponera del Barrio</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .cupon-wrap {
+      min-height: calc(100vh - 70px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .cupon-result { width: 100%; max-width: 420px; }
+    .estado-icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+    .estado-titulo { font-family: 'Fraunces', serif; font-size: 1.6rem; text-align: center; margin-bottom: .5rem; }
+    .estado-sub { color: var(--text-muted); text-align: center; font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Cuponera <span>del Barrio</span></a>
+  </div>
+</nav>
+
+<div class="cupon-wrap">
+  <div class="cupon-result" id="resultado">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<script>
+(async () => {
+  const cuponId = window.location.pathname.split('/').pop();
+  const el = document.getElementById('resultado');
+
+  const res = await fetch(`/api/canjes/escanear/${cuponId}`, { method: 'POST' });
+  const data = await res.json();
+
+  if (!res.ok) {
+    el.innerHTML = `
+      <div class="card">
+        <div class="estado-icon">❌</div>
+        <div class="estado-titulo">Cupón no disponible</div>
+        <div class="estado-sub" style="margin-top:.5rem;">${data.detail || 'Este cupón no se puede usar en este momento.'}</div>
+        <div style="text-align:center;margin-top:1.5rem;">
+          <a href="/" class="btn btn--secondary">Ver otros cupones</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="estado-icon">✅</div>
+      <div class="estado-titulo">¡Cupón escaneado!</div>
+      <div class="estado-sub">El vendedor está confirmando tu compra</div>
+      <div style="background:var(--surface-warm);border-radius:var(--radius-sm);padding:1.1rem;margin:1.25rem 0;">
+        <div style="font-size:.85rem;color:var(--text-muted);">${data.negocio}</div>
+        <div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;margin:.2rem 0;">${data.producto}</div>
+        <div style="color:var(--accent);font-weight:600;font-size:1.1rem;">
+          $${data.precio_final.toFixed(2)}
+          <span style="font-size:.8rem;color:var(--text-muted);font-weight:400;">
+            / ${data.tipo_precio === 'peso' ? 'kg' : 'unidad'}
+          </span>
+        </div>
+      </div>
+      <div class="estado-sub">Mostrá esta pantalla al vendedor mientras confirma la venta.</div>
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="/" class="btn btn--ghost btn--sm">← Ver más cupones</a>
+      </div>
+    </div>`;
+})();
+</script>
+</body>
+</html>

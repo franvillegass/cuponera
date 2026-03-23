@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@400;500&display=swap');
+
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface-warm: #fef9f0;
+  --accent: #d4581a;
+  --accent-light: #f4e4d8;
+  --accent-dark: #a83f0e;
+  --text: #1c1410;
+  --text-muted: #7a6a5e;
+  --text-light: #b0a090;
+  --border: #e8ddd4;
+  --border-strong: #c8b8a8;
+  --success: #2d7a4f;
+  --success-bg: #e8f5ee;
+  --error: #b83232;
+  --error-bg: #fdeaea;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(60,30,10,0.08);
+  --shadow-lg: 0 8px 32px rgba(60,30,10,0.13);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Evita zoom en inputs en iOS (requiere font-size >= 16px) */
+input, select, textarea { font-size: 1rem; }
+
+/* ── Tipografía ── */
+h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 700; line-height: 1.2; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); }
+h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+h3 { font-size: 1.2rem; }
+
+/* ── Layout ── */
+.container { max-width: 800px; margin: 0 auto; padding: 0 1.25rem; }
+.container--narrow { max-width: 480px; margin: 0 auto; padding: 0 1.25rem; }
+
+/* ── Navbar ── */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav__inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+.nav__logo { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+.nav__logo span { color: var(--text); }
+.nav__links { display: flex; gap: .75rem; align-items: center; }
+
+/* ── Botones ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .95rem;
+  padding: .65rem 1.3rem; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; transition: all .18s ease;
+  text-decoration: none; white-space: nowrap;
+}
+.btn--primary { background: var(--accent); color: #fff; }
+.btn--primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn--secondary { background: transparent; color: var(--text); border: 1.5px solid var(--border-strong); }
+.btn--secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn--ghost { background: transparent; color: var(--text-muted); }
+.btn--ghost:hover { color: var(--accent); }
+.btn--danger { background: var(--error-bg); color: var(--error); border: 1.5px solid var(--error); }
+.btn--danger:hover { background: var(--error); color: #fff; }
+.btn--sm { padding: .4rem .85rem; font-size: .85rem; }
+.btn--full { width: 100%; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+/* ── Toggle (activar/desactivar cupón) ── */
+.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle__track {
+  position: absolute; inset: 0;
+  background: var(--border-strong); border-radius: 12px;
+  cursor: pointer; transition: background .2s;
+}
+.toggle input:checked + .toggle__track { background: var(--accent); }
+.toggle__track::after {
+  content: ''; position: absolute;
+  top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  background: #fff; border-radius: 50%;
+  transition: transform .2s;
+}
+.toggle input:checked + .toggle__track::after { transform: translateX(20px); }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+/* ── Form ── */
+.form-group { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1.1rem; }
+.form-label { font-size: .9rem; font-weight: 500; color: var(--text-muted); }
+.form-input, .form-select {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; padding: .7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color .15s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ── Alertas ── */
+.alert { padding: .85rem 1.1rem; border-radius: var(--radius-sm); font-size: .95rem; margin-bottom: 1rem; }
+.alert--error { background: var(--error-bg); color: var(--error); border: 1px solid #f5bebe; }
+.alert--success { background: var(--success-bg); color: var(--success); border: 1px solid #b8dfc9; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block; padding: .2rem .6rem;
+  border-radius: 20px; font-size: .78rem; font-weight: 500;
+}
+.badge--active { background: var(--success-bg); color: var(--success); }
+.badge--inactive { background: var(--border); color: var(--text-muted); }
+
+/* ── Precio descuento ── */
+.precio-base { text-decoration: line-through; color: var(--text-light); font-size: .9rem; }
+.precio-final { color: var(--accent); font-weight: 600; font-size: 1.1rem; }
+.descuento-pill {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-size: .75rem; font-weight: 600;
+  padding: .15rem .5rem; border-radius: 20px;
+}
+
+/* ── Modal overlay ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(28, 20, 16, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.modal-overlay.visible { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 2rem; max-width: 420px; width: 100%;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(16px);
+  transition: transform .2s;
+}
+.modal-overlay.visible .modal { transform: translateY(0); }
+.modal__title { font-family: 'Fraunces', serif; font-size: 1.4rem; margin-bottom: .5rem; }
+.modal__actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
+
+/* ── QR modal ── */
+.qr-img { display: block; margin: 1rem auto; max-width: 220px; width: 100%; }
+
+/* ── Feed cupones ── */
+.feed { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 0; }
+.cupon-card { cursor: pointer; transition: box-shadow .18s, border-color .18s; }
+.cupon-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border-strong); }
+.cupon-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.cupon-card__negocio { font-size: .85rem; color: var(--text-muted); margin-bottom: .2rem; }
+.cupon-card__producto { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; }
+.cupon-card__precios { display: flex; align-items: baseline; gap: .5rem; margin-top: .4rem; }
+.cupon-card__detalle {
+  margin-top: 1rem; padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.cupon-card__detalle.open { display: block; }
+.cupon-card__meta { font-size: .85rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+/* ── Panel cupones del negocio ── */
+.panel-cupon {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  display: flex; gap: 1rem; align-items: flex-start;
+  transition: box-shadow .18s;
+}
+.panel-cupon:hover { box-shadow: var(--shadow); }
+.panel-cupon__info { flex: 1; min-width: 0; }
+.panel-cupon__actions { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+.panel-cupon__nombre { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; }
+.panel-cupon__precios { font-size: .9rem; color: var(--text-muted); margin-top: .2rem; }
+
+/* ── Estado vacío ── */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+.empty__icon { font-size: 2.5rem; margin-bottom: .75rem; }
+.empty__text { font-size: 1rem; }
+
+/* ── Spinner ── */
+.spinner {
+  width: 32px; height: 32px; margin: 2rem auto;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Header de página ── */
+.page-header { padding: 2.5rem 0 1.5rem; }
+.page-header p { color: var(--text-muted); margin-top: .4rem; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+
+  /* Panel cupones */
+  .panel-cupon { flex-direction: column; gap: .75rem; }
+  .panel-cupon__actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .panel-cupon__actions .btn { flex: 1; min-width: 0; text-align: center; }
+  .panel-cupon__actions .toggle { margin-left: auto; }
+
+  /* Nav */
+  .nav__links { gap: .4rem; }
+  .nav__logo { font-size: 1.15rem; }
+
+  /* Modales */
+  .modal {
+    padding: 1.25rem;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal__actions { flex-direction: column; }
+  .modal__actions .btn { width: 100%; }
+
+  /* Page header */
+  .page-header { padding: 1.5rem 0 1rem; }
+  h1 { font-size: 1.75rem; }
+
+  /* Feed cards */
+  .cupon-card__header { flex-wrap: wrap; gap: .5rem; }
+  .descuento-pill { align-self: flex-start; }
+
+  /* Buttons en detalle de cupón */
+  .cupon-card__detalle > div:last-child {
+    flex-direction: column;
+  }
+  .cupon-card__detalle > div:last-child .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

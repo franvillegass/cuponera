@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingresar — Cuponera del Barrio</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    .login-wrap {
+      min-height: calc(100vh - 70px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem 1rem;
+    }
+    .login-card { width: 100%; max-width: 440px; }
+    .login-header { text-align: center; margin-bottom: 1.75rem; }
+    .login-header h1 { font-size: 1.75rem; }
+    .login-header p { color: var(--text-muted); margin-top: .4rem; }
+    .tab-row { display: flex; margin-bottom: 1.5rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .tab-btn {
+      flex: 1; padding: .6rem; font-family: 'DM Sans', sans-serif;
+      font-size: .9rem; font-weight: 500; border: none; cursor: pointer;
+      background: transparent; color: var(--text-muted); transition: all .15s;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+
+    /* Ubicación */
+    .ubicacion-box {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .ubicacion-input-wrap {
+      display: flex; align-items: center; gap: 0;
+    }
+    .ubicacion-input-wrap .form-input {
+      border: none; border-radius: 0; flex: 1;
+    }
+    .ubicacion-input-wrap .form-input:focus { outline: none; box-shadow: none; }
+    .btn-gps {
+      padding: .7rem 1rem; background: var(--surface-warm);
+      border: none; border-left: 1.5px solid var(--border);
+      cursor: pointer; color: var(--accent); font-size: 1rem;
+      white-space: nowrap; transition: background .15s;
+      display: flex; align-items: center; gap: .35rem;
+      font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 500;
+    }
+    .btn-gps:hover { background: var(--accent-light); }
+    .btn-gps:disabled { opacity: .5; cursor: not-allowed; }
+    .ubicacion-estado {
+      font-size: .8rem; padding: .4rem .75rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted); display: none;
+    }
+    .ubicacion-estado.visible { display: block; }
+    .ubicacion-estado.ok { color: var(--success); }
+    .ubicacion-estado.error { color: var(--error); }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Cuponera <span>del Barrio</span></a>
+  </div>
+</nav>
+
+<div class="login-wrap">
+  <div class="login-card card">
+    <div class="login-header">
+      <h1>Panel de negocios</h1>
+      <p>Ingresá o registrá tu negocio</p>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Ingresar</button>
+      <button class="tab-btn" id="tab-registro" onclick="switchTab('registro')">Registrarse</button>
+    </div>
+
+    <div id="alert"></div>
+
+    <!-- Formulario login -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Nombre del negocio</label>
+        <input type="text" id="login-nombre" class="form-input" placeholder="Ej: Almacén Don Pedro" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="login-pass" class="form-input" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn--primary btn--full" onclick="doLogin()">Ingresar</button>
+    </div>
+
+    <!-- Formulario registro -->
+    <div id="form-registro" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Nombre del negocio</label>
+        <input type="text" id="reg-nombre" class="form-input" placeholder="Ej: Almacén Don Pedro" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción (opcional)</label>
+        <input type="text" id="reg-desc" class="form-input" placeholder="Ej: Almacén de barrio en Av. Colón">
+      </div>
+
+      <!-- Ubicación -->
+      <div class="form-group">
+        <label class="form-label">Dirección del negocio</label>
+        <div class="ubicacion-box">
+          <div class="ubicacion-input-wrap">
+            <input type="text" id="reg-direccion" class="form-input"
+              placeholder="Ej: Av. Colón 1234, Córdoba"
+              oninput="limpiarCoordenadas()">
+            <button class="btn-gps" id="btn-gps" onclick="obtenerUbicacion()" type="button">
+              📍 Usar GPS
+            </button>
+          </div>
+          <div class="ubicacion-estado" id="ubicacion-estado"></div>
+        </div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-top:.3rem;">
+          Podés escribir la dirección o usar el GPS para que los clientes puedan encontrar tu negocio
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="reg-pass" class="form-input" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <button class="btn btn--primary btn--full" onclick="doRegistro()">Registrarse</button>
+    </div>
+
+    <p style="text-align:center;margin-top:1.25rem;font-size:.85rem;color:var(--text-muted)">
+      <a href="/" style="color:var(--accent);">← Ver cupones del barrio</a>
+    </p>
+  </div>
+</div>
+
+<script>
+// Coordenadas obtenidas por GPS
+let coordenadas = { lat: null, lng: null };
+
+function switchTab(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-registro').style.display = tab === 'registro' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-registro').classList.toggle('active', tab === 'registro');
+  document.getElementById('alert').innerHTML = '';
+}
+
+function showAlert(msg, tipo = 'error') {
+  document.getElementById('alert').innerHTML = `<div class="alert alert--${tipo}">${msg}</div>`;
+}
+
+function limpiarCoordenadas() {
+  // Si el usuario edita la dirección a mano, limpiamos las coords del GPS
+  coordenadas = { lat: null, lng: null };
+  setUbicacionEstado('');
+}
+
+function setUbicacionEstado(msg, tipo = '') {
+  const el = document.getElementById('ubicacion-estado');
+  el.textContent = msg;
+  el.className = 'ubicacion-estado' + (msg ? ' visible' : '') + (tipo ? ` ${tipo}` : '');
+}
+
+async function obtenerUbicacion() {
+  const btn = document.getElementById('btn-gps');
+  if (!navigator.geolocation) {
+    setUbicacionEstado('Tu navegador no soporta geolocalización', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Buscando...';
+  setUbicacionEstado('Obteniendo tu ubicación...', '');
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      coordenadas.lat = pos.coords.latitude;
+      coordenadas.lng = pos.coords.longitude;
+
+      // Intentar geocodificación inversa con Nominatim (gratuita, sin API key)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${coordenadas.lat}&lon=${coordenadas.lng}&format=json`,
+          { headers: { 'Accept-Language': 'es' } }
+        );
+        const data = await res.json();
+        const addr = data.display_name || `${coordenadas.lat.toFixed(5)}, ${coordenadas.lng.toFixed(5)}`;
+        document.getElementById('reg-direccion').value = addr;
+        setUbicacionEstado('✓ Ubicación obtenida correctamente', 'ok');
+      } catch {
+        // Si falla el geocoding igual guardamos las coords
+        document.getElementById('reg-direccion').value = `${coordenadas.lat.toFixed(5)}, ${coordenadas.lng.toFixed(5)}`;
+        setUbicacionEstado('✓ Ubicación obtenida (coordenadas)', 'ok');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '📍 Usar GPS';
+    },
+    (err) => {
+      btn.disabled = false;
+      btn.innerHTML = '📍 Usar GPS';
+      const msgs = {
+        1: 'Permiso denegado. Habilitá la ubicación en tu navegador.',
+        2: 'No se pudo obtener la ubicación.',
+        3: 'Tiempo de espera agotado. Intentá de nuevo.',
+      };
+      setUbicacionEstado(msgs[err.code] || 'Error al obtener ubicación', 'error');
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+async function doLogin() {
+  const nombre = document.getElementById('login-nombre').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!nombre || !password) return showAlert('Completá todos los campos');
+
+  const res = await fetch('/api/negocios/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ nombre, password })
+  });
+  const data = await res.json();
+  if (!res.ok) return showAlert(data.detail || 'Error al ingresar');
+  window.location.href = '/panel';
+}
+
+async function doRegistro() {
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const descripcion = document.getElementById('reg-desc').value.trim();
+  const direccion = document.getElementById('reg-direccion').value.trim();
+  const password = document.getElementById('reg-pass').value;
+
+  if (!nombre || !password) return showAlert('Completá nombre y contraseña');
+  if (!direccion) return showAlert('Ingresá la dirección de tu negocio');
+
+  const res = await fetch('/api/negocios/registro', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      nombre, descripcion, password, direccion,
+      lat: coordenadas.lat,
+      lng: coordenadas.lng
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) return showAlert(data.detail || 'Error al registrarse');
+  window.location.href = '/panel';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const loginVisible = document.getElementById('form-login').style.display !== 'none';
+  loginVisible ? doLogin() : doRegistro();
+});
+</script>
+</body>
+</html>
