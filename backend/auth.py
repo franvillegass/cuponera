@@ -2,7 +2,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Cookie
-from database import get_conn
+from backend.database import get_conn
 
 SESSION_DURATION_HOURS = 8
 

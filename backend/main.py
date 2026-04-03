@@ -2,10 +2,10 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from database import init_db
-from auth import get_current_negocio
-import websocket as ws_manager
-from routes import negocios, cupones, canjes, stats
+from backend.database import init_db
+from backend.auth import get_current_negocio
+import backend.websocket as ws_manager
+from backend.routes import negocios, cupones, canjes, stats
 
 # Rutas absolutas basadas en la ubicación de este archivo
 BASE_DIR = Path(__file__).resolve().parent          # .../cuponera/backend
