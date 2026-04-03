@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from database import get_conn
-from auth import get_current_negocio
+from backend.database import get_conn
+from backend.auth import get_current_negocio
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 

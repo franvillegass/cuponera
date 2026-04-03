@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response, Depends
 from pydantic import BaseModel
-from database import get_conn
-from auth import hash_password, verify_password, create_session, get_current_negocio
+from backend.database import get_conn
+from backend.auth import hash_password, verify_password, create_session, get_current_negocio
 
 router = APIRouter(prefix="/negocios", tags=["negocios"])
 

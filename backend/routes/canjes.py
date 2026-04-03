@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
-from database import get_conn
-from auth import get_current_negocio
-import websocket as ws_manager
+from backend.database import get_conn
+from backend.auth import get_current_negocio
+import backend.websocket as ws_manager
 
 router = APIRouter(prefix="/canjes", tags=["canjes"])
 

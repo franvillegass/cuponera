@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from database import get_conn
-from auth import get_current_negocio
-from qr import generate_qr_base64
+from backend.database import get_conn
+from backend.auth import get_current_negocio
+from backend.qr import generate_qr_base64
 
 router = APIRouter(prefix="/cupones", tags=["cupones"])
 
